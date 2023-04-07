@@ -1,43 +1,38 @@
-import * as vscode from 'vscode';
+import { ExtensionContext, QuickPickItem, StatusBarAlignment, commands, window } from 'vscode';
 
-enum Action {
-	openRepoHomepage = 'Open repo homepage',
-	openCurrentFile = 'Open current file',
-}
+const ACTION: Record<string, QuickPickItem> =  {
+	openRepoHomepage: {
+		label: 'Homepage',
+		description: 'Open the repository homepage in your browser',
+	},
+	openCurrentFile: {
+		label: 'Current file',
+		description: 'Open the current file in your browser',
+	},
+};
 
 async function modal() {
-	const selection = await vscode.window.showQuickPick([
-		Action.openRepoHomepage,
-		Action.openCurrentFile
-	], { placeHolder: 'Open in GitHub' }) as Action | undefined;
-
+	const selection = await window.showQuickPick(Object.values(ACTION));
 	if (!selection) { return; };
-
 	switch (selection) {
-		case Action.openCurrentFile: {
-			vscode.commands.executeCommand('openInGitHub.openFile');
+		case ACTION.openCurrentFile: {
+			commands.executeCommand('openInGitHub.openFile');
 			break;
 		}
-		case Action.openRepoHomepage: {
-			vscode.commands.executeCommand('openInGitHub.openProject');
+		case ACTION.openRepoHomepage: {
+			commands.executeCommand('openInGitHub.openProject');
 			break;
 		}
 	}
 }
 
-export function activate(context: vscode.ExtensionContext) {
-	const disposable = vscode.commands.registerCommand('open-in-github.modal', modal);
-
+export function activate(context: ExtensionContext) {
 	context.subscriptions.push(
-		disposable
+		commands.registerCommand('open-in-github.modal', modal)
 	);
-
-	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
-	console.log(statusBar);
-	statusBar.command = 'open-in-github.modal';
-	statusBar.text = '$(github)';
-	statusBar.tooltip = 'Open in GitHub';
-	statusBar.show();
+	const barItem = window.createStatusBarItem(StatusBarAlignment.Left, 0);
+	barItem.command = 'open-in-github.modal';
+	barItem.text = '$(github)';
+	barItem.tooltip = 'Open in GitHub';
+	barItem.show();
 }
-
-export function deactivate() { }
